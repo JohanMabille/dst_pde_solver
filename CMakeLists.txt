@@ -26,6 +26,10 @@ set(PDE_SOLVER_SRCS
     main.cpp
     volatility.cpp
     volatility.hpp
+    rates.cpp
+    rates.hpp
+    payoff.cpp
+    payoff.hpp
     params.cpp
     params.hpp
     mesh.cpp

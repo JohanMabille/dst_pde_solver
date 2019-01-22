@@ -2,6 +2,8 @@
 #include "volatility.hpp"
 #include <cmath>
 #include <limits>
+#include "rates.hpp"
+#include "payoff.hpp"
 #include <algorithm>
 #include <cstdlib>
 namespace dauphine
@@ -78,7 +80,7 @@ namespace dauphine
 		return result;
 	}
 
-	std::vector<double> diag_vector(mesh m, initial_function rate, volatility vol, std::vector<double> arguments,double theta)
+	std::vector<double> diag_vector(mesh m, rates rate, volatility vol, std::vector<double> arguments, double theta)
 	{
 		std::vector<double> a = m.spot_vect;
 		long size = a.size();
@@ -88,13 +90,13 @@ namespace dauphine
 		for (std::size_t i = 1; i < size - 1; ++i)
 		{
 			arguments[0] = a[i]; // coeff depends on S if rate or vol depend on S
-			result[i] = 1.0 + theta * m.get_mesh_dt()*((pow(vol.get_volatility(arguments), 2) / pow(m.d_x, 2)) + rate.function_operator(arguments));
+			result[i] = 1.0 + theta * m.get_mesh_dt()*((pow(vol.get_volatility(arguments), 2) / pow(m.d_x, 2)) + rate.get_rates(arguments));
 		}
 		return result;
 	}
 
 
-	std::vector<double> sub_vector(mesh m, initial_function rate, volatility vol, std::vector<double> arguments,double theta)
+	std::vector<double> sub_vector(mesh m, rates rate, volatility vol, std::vector<double> arguments,double theta)
 	{
 		std::vector<double> a = m.spot_vect;
 		long size = a.size();
@@ -104,13 +106,13 @@ namespace dauphine
 		for (std::size_t i = 1; i < size - 1; ++i)
 		{
 			arguments[0] = a[i]; // coeff depends on S if rate or vol depend on S
-			result[i] = -0.5*theta * m.get_mesh_dt()*((pow(vol.get_volatility(arguments), 2) / pow(m.d_x, 2)) + ((pow(vol.get_volatility(arguments), 2) - rate.function_operator(arguments)) / (2.0*m.d_x)));
+			result[i] = -0.5*theta * m.get_mesh_dt()*((pow(vol.get_volatility(arguments), 2) / pow(m.d_x, 2)) + ((pow(vol.get_volatility(arguments), 2) - rate.get_rates(arguments)) / (2.0*m.d_x)));
 		}
 		return result;
 	}
 
 
-	std::vector<double> up_vector(mesh m, initial_function rate, volatility vol, std::vector<double> arguments,double theta)
+	std::vector<double> up_vector(mesh m, rates rate, volatility vol, std::vector<double> arguments,double theta)
 	{
 		std::vector<double> a = m.spot_vect;
 		long size = a.size();
@@ -120,7 +122,7 @@ namespace dauphine
 		for (std::size_t i = 1; i < size - 1; ++i)
 		{
 			arguments[0] = a[i]; // coeff depends on S if rate or vol depend on S
-			result[i] = 0.5*theta * m.get_mesh_dt()*((-pow(vol.get_volatility(arguments), 2) / pow(m.d_x, 2)) + ((pow(vol.get_volatility(arguments), 2) - rate.function_operator(arguments)) / (2.0*m.d_x)));
+			result[i] = 0.5*theta * m.get_mesh_dt()*((-pow(vol.get_volatility(arguments), 2) / pow(m.d_x, 2)) + ((pow(vol.get_volatility(arguments), 2) - rate.get_rates(arguments)) / (2.0*m.d_x)));
 		}
 		return result;
 	}
@@ -149,7 +151,7 @@ namespace dauphine
 
 	}
 
-	std::vector<double> price_today(double theta, mesh m, initial_function rate, volatility vol,  initial_function payoff, bool time_S_dependent)
+	std::vector<double> price_today(double theta, mesh m, rates rate, volatility vol,  initial_function payoff, bool time_S_dependent)
 	{
 		// arguments allow to follow S,t and 
 		std::vector<double> arguments(2);
@@ -190,7 +192,7 @@ namespace dauphine
 			}
 
 			// Creation 2nd membre
-			d[N - 1] = f_old[N - 1] * exp(-rate.function_operator(arguments)*m.get_mesh_dt());
+			d[N - 1] = f_old[N - 1] * exp(-rate.get_rates(arguments)*m.get_mesh_dt());
 			for (long i = 1; i < N - 1; i++)
 			{
 				d[i] = c_1[i] * f_old[i + 1] + b_1[i] * f_old[i] + a_1[i] * f_old[i - 1];

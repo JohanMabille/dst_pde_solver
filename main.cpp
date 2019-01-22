@@ -2,6 +2,8 @@
 #include "closed_form.hpp"
 #include "solver.hpp"
 #include "volatility.hpp"
+#include "rates.hpp"
+#include "payoff.hpp"
 //#include "solverT.hpp"
 //#include "params.hpp"
 //#include "mesh.hpp"
@@ -17,9 +19,9 @@ namespace dauphine
 	double payoff_function(std::vector<double> arguments) {
 		return std::max(arguments[0]-100,0.);
 	}
-	double rate_function(std::vector<double> arguments) {
+	/*double rate_function(std::vector<double> arguments) {
 		return 0.0;
-	}
+	} */
 	/*double volatility_function(std::vector<double> arguments) {
 		return 0.20;
 	} */
@@ -36,6 +38,9 @@ namespace dauphine
 		int number_arguments(5);
 		double spot=100.;
 		double maturity=1.;
+		
+
+		//the client should be able to specify the value of θ
 		double theta = 0.5;
 
 		std::vector<double> mesh_boundaries(2);
@@ -43,7 +48,7 @@ namespace dauphine
 		mesh_boundaries[1] = std::exp(std::log(spot) + 1.);
 		
 		initial_function payoff(payoff_function);
-		initial_function rate(rate_function);
+		//initial_function rate(rate_function);
        
 		//initial_function volatility(volatility_function);
 		//initial_function up_boundaries(boundaries_up);
@@ -55,11 +60,23 @@ namespace dauphine
         int nb_x = 1001;
 		
         //Creation mesh
+	//the client should be able to specify to specify the mesh
+	//Mesh(double dt, double dx,double maturity(in years), double spot,boundaries)
+
+
         mesh m(1./365.,1001,1.,100.,mesh_boundaries);
         
         //Creation vol
         volatility vol;
         
+	//Creation rates
+        rates rate;
+
+	//Creation payoff
+        //payoff p;
+
+
+
         //Compute price
 		std::vector<double> result = price_today(theta,m,rate,vol,payoff,false);
 		
@@ -71,12 +88,14 @@ namespace dauphine
 		double delta = (result[i] - result[i-1]) / (m.spot_vect[i] - m.spot_vect[i-1]);
 		double gamma = (result[i + 1] - 2 * result[i] + result[i - 1]) / (pow((m.spot_vect[i+1] - m.spot_vect[i-1])/2.0, 2));
 		double theta_product = (result[0]-price);
+		// for the vega, we should have a discretization w.r.t the volatility
         
         //Print results (Price and Greeks)
 		std::cout << "Price: " <<price << std::endl;
 		std::cout << "Delta: " << delta << std::endl;
 		std::cout << "Gamma: " << gamma << std::endl;
 		std::cout << "Theta: " << theta_product << std::endl;
+
 	}
 }
 
